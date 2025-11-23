@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Trihana Management - Residential Property Management</title>
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
+
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script type="module" src="http://[::1]:5173/@vite/client"></script><link rel="stylesheet" href="http://[::1]:5173/resources/css/app.css" /><script type="module" src="http://[::1]:5173/resources/js/app.js"></script><script id="browser-logger-active">
+(function() {
+    const ENDPOINT = 'http://127.0.0.1:8000/_boost/browser-logs';
+    const logQueue = [];
+    let flushTimeout = null;
+
+    console.log('🔍 Browser logger active (MCP server detected). Posting to: ' + ENDPOINT);
+
+    // Store original console methods
+    const originalConsole = {
+        log: console.log,
+        info: console.info,
+        error: console.error,
+        warn: console.warn,
+        table: console.table
+    };
+
+    // Helper to safely stringify values
+    function safeStringify(obj) {
+        const seen = new WeakSet();
+        return JSON.stringify(obj, (key, value) => {
+            if (typeof value === 'object' && value !== null) {
+                if (seen.has(value)) return '[Circular]';
+                seen.add(value);
+            }
+            if (value instanceof Error) {
+                return {
+                    name: value.name,
+                    message: value.message,
+                    stack: value.stack
+                };
+            }
+            return value;
+        });
+    }
+
+    // Batch and send logs
+    function flushLogs() {
+        if (logQueue.length === 0) return;
+
+        const batch = logQueue.splice(0, logQueue.length);
+
+        fetch(ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ logs: batch })
+        }).catch(err => {
+            // Silently fail to avoid infinite loops
+            originalConsole.error('Failed to send logs:', err);
+        });
+    }
+
+    // Debounced flush (100ms)
+    function scheduleFlush() {
+        if (flushTimeout) clearTimeout(flushTimeout);
+        flushTimeout = setTimeout(flushLogs, 100);
+    }
+
+    // Intercept console methods
+    ['log', 'info', 'error', 'warn', 'table'].forEach(method => {
+        console[method] = function(...args) {
+            // Call original method
+            originalConsole[method].apply(console, args);
+
+            // Capture log data
+            try {
+                logQueue.push({
+                    type: method,
+                    timestamp: new Date().toISOString(),
+                    data: args.map(arg => {
+                        try {
+                            return typeof arg === 'object' ? JSON.parse(safeStringify(arg)) : arg;
+                        } catch (e) {
+                            return String(arg);
+                        }
+                    }),
+                    url: window.location.href,
+                    userAgent: navigator.userAgent
+                });
+
+                scheduleFlush();
+            } catch (e) {
+                // Fail silently
+            }
+        };
+    });
+
+    // Global error handlers for uncaught errors
+    const originalOnError = window.onerror;
+    window.onerror = function boostErrorHandler(errorMsg, url, lineNumber, colNumber, error) {
+        try {
+            logQueue.push({
+                type: 'uncaught_error',
+                timestamp: new Date().toISOString(),
+                data: [{
+                    message: errorMsg,
+                    filename: url,
+                    lineno: lineNumber,
+                    colno: colNumber,
+                    error: error ? {
+                        name: error.name,
+                        message: error.message,
+                        stack: error.stack
+                    } : null
+                }],
+                url: window.location.href,
+                userAgent: navigator.userAgent
+            });
+
+            scheduleFlush();
+        } catch (e) {
+            // Fail silently
+        }
+
+        // Call original handler if it exists
+        if (originalOnError && typeof originalOnError === 'function') {
+            return originalOnError(errorMsg, url, lineNumber, colNumber, error);
+        }
+
+        // Let the error continue to propagate
+        return false;
+    }
+    window.addEventListener('error', (event) => {
+        try {
+            logQueue.push({
+                type: 'window_error',
+                timestamp: new Date().toISOString(),
+                data: [{
+                    message: event.message,
+                    filename: event.filename,
+                    lineno: event.lineno,
+                    colno: event.colno,
+                    error: event.error ? {
+                        name: event.error.name,
+                        message: event.error.message,
+                        stack: event.error.stack
+                    } : null
+                }],
+                url: window.location.href,
+                userAgent: navigator.userAgent
+            });
+
+            scheduleFlush();
+        } catch (e) {
+            // Fail silently
+        }
+
+        // Let the error continue to propagate
+        return false;
+    });
+    window.addEventListener('unhandledrejection', (event) => {
+        try {
+            logQueue.push({
+                type: 'error',
+                timestamp: new Date().toISOString(),
+                data: [{
+                    message: 'Unhandled Promise Rejection',
+                    reason: event.reason instanceof Error ? {
+                        name: event.reason.name,
+                        message: event.reason.message,
+                        stack: event.reason.stack
+                    } : event.reason
+                }],
+                url: window.location.href,
+                userAgent: navigator.userAgent
+            });
+
+            scheduleFlush();
+        } catch (e) {
+            // Fail silently
+        }
+
+        // Let the rejection continue to propagate
+        return false;
+    });
+
+    // Flush on page unload
+    window.addEventListener('beforeunload', () => {
+        if (logQueue.length > 0) {
+            navigator.sendBeacon(ENDPOINT, JSON.stringify({ logs: logQueue }));
+        }
+    });
+})();
+</script>
+</head>
+<body class="antialiased bg-[#002B2A] text-gray-300">
+    
+    <header class="sticky top-0 z-50 w-full bg-[#002B2A]/90 backdrop-blur-sm border-b border-[#004F4D]">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="#home">
+                         <img class="h-10 w-auto" 
+                               src="http://127.0.0.1:8000/img/logotrihana.png" 
+                               alt="Trihana Management Logo">
+                    </a>
+                </div>
+                
+                <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                    <a href="#home" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md text-sm font-medium">Home</a>
+                    <a href="#about" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md text-sm font-medium">About</a>
+                    <a href="#feature" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md text-sm font-medium">Feature</a>
+                    <a href="#testimonials" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md text-sm font-medium">Testimonials</a>
+                    <a href="#faq" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md text-sm font-medium">FAQ</a>
+                    <a href="#contact" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md text-sm font-medium">Contact</a>
+                </div>
+                
+                <div class="flex items-center sm:hidden">
+                    <input type="checkbox" id="mobile-menu-toggle" class="peer hidden" />
+                    <label for="mobile-menu-toggle" class="z-20 p-2 rounded-md text-gray-400 cursor-pointer">
+                        <span class="sr-only">Buka menu</span>
+                        <svg class="block h-6 w-6 peer-checked:hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg class="hidden h-6 w-6 peer-checked:block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </label>
+                    
+                    <div id="mobile-menu-content" class="fixed inset-x-0 top-16 w-full max-h-0 overflow-hidden transition-all duration-300 ease-in-out bg-[#002524] 
+                                peer-checked:max-h-screen peer-checked:border-t peer-checked:border-[#004F4D]">
+                        <div class="px-2 pt-2 pb-3 space-y-1">
+                            <a href="#home" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Home</a>
+                            <a href="#about" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">About</a>
+                            <a href="#feature" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Feature</a>
+                            <a href="#testimonials" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Testimonials</a>
+                            <a href="#faq" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">FAQ</a>
+                            <a href="#contact" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Contact</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </nav>
+    </header>
+
+    <main class="overflow-x-hidden"> 
+        
+        <section id="home" class="relative min-h-screen flex items-center">
+             <div class="absolute inset-0">
+                <img src="img/TRIHANA.jpg" alt="Hero Image" class="w-full h-full object-cover opacity-50">
+                <div class="absolute inset-0 bg-gray-20 bg-opacity-40"></div>
+            </div>
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-24">
+                <h1 data-aos="zoom-in" class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl">
+                    <span class="block xl:inline">TRIHANA</span> 
+                    <span class="block text-yellow-400 xl:inline">MANAGEMENT</span> 
+                </h1>
+                <p data-aos="zoom-in" data-aos-delay="200" class="mt-6 max-w-md mx-auto text-lg text-gray-300 sm:text-xl md:mt-8 md:max-w-3xl">
+                    RESIDENTIAL PROPERTY MANAGEMENT 
+                </p>
+            </div>
+        </section>
+
+        <section id="about" class="py-20 sm:py-32 bg-[#002524]">
+             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center" data-aos="fade-up">
+                    <h2 class="text-3xl font-extrabold text-yellow-400 sm:text-4xl">
+                        TRIHANA MANAGEMENT 
+                    </h2>
+                    <p class="mt-6 max-w-2xl mx-auto text-xl text-gray-300">
+                        A company specializing in residential property management with over 20 years of experience in property maintenance, facility management, marketing, and residential administration. 
+                    </p>
+                    <p class="mt-6 text-2xl italic text-yellow-500">
+                        "Your trusted bleisure partner" 
+                    </p>
+                    <p class="mt-8 max-w-3xl mx-auto text-lg text-gray-400">
+                        That way, everything is made easier for the tenants, landowners, and everyone else involved in the property. 
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="feature" class="py-20 sm:py-32">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                <div class="text-center mb-16" data-aos="fade-up">
+                    <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
+                        Our Features & Services
+                    </h2>
+                    <p class="mt-4 text-xl text-gray-400">
+                        Mengapa memilih Trihana Management untuk properti Anda.
+                    </p>
+                </div>
+
+                <div class="py-16 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div data-aos="fade-right" data-aos-duration="600">
+                        <h3 class="text-2xl font-bold text-yellow-400">A Close Look Of Residential Property Management</h3>
+                        <p class="mt-4 text-lg text-gray-400">
+                            Residential property management is crucial to ensure that rental properties remain profitable and that tenants are paying their dues on time and keeping the property in the best condition possible. 
+                        </p>
+                        <ul class="mt-6 space-y-4">
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Marketing the property to attract new tenants</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Screening tenants and overseeing the leasing process</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Collecting rent and dues from tenants</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Maintaining the property and fixing any issues</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Conducting rental inspections to ensure that tenants are caring for the units in which they live</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Financial reporting to keep track of expenses, payments, and taxes</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-10 md:mt-0" data-aos="fade-left" data-aos-duration="600">
+                        <img src="img/service.webp" alt="Services Image [Ganti gambar ini di Controller]" class="rounded-lg shadow-xl object-cover w-full h-full">
+                    </div>
+                </div>
+
+                <div class="py-16 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div class="mt-10 md:mt-0 md:order-2" data-aos="fade-left" data-aos-duration="600">
+                        <h3 class="text-2xl font-bold text-yellow-400">Our Residential Property Manager Standard Qualification</h3>
+                        <p class="mt-4 text-lg text-gray-400">
+                            Since residential property management is a very demanding and hands-on job, Our Residential Property Managers must have a wide set of skills. Some of the key skills include: 
+                        </p>
+                        <ul class="mt-6 space-y-4">
+                             <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Strong communication</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Patience and flexibility when dealing with tenants</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Knowledge of local rules and regulations</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Financial management</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Organization skills</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Customer service knowledge</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Marketing skills</span>
+                            </li>
+                             <li class="flex items-start">
+                                <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-yellow-400 text-gray-900 font-bold">&check;</span>
+                                <span class="ml-4 text-base">Assertiveness</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="md:order-1" data-aos="fade-right" data-aos-duration="600">
+                        <img src="img/qualification.webp" alt="Qualification Image [Ganti gambar ini di Controller]" class="rounded-lg shadow-xl object-cover w-full h-full">
+                    </div>
+                </div>
+
+                <div class="py-16">
+                    <h3 class="text-center text-3xl font-extrabold text-white sm:text-4xl mb-12" data-aos="fade-up">
+                        Why Us? 
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div class="bg-[#003837] p-6 rounded-lg shadow-lg" data-aos="fade-up" data-aos-delay="100">
+                            <h4 class="text-xl font-bold text-yellow-400">Professional and Creative Team</h4>
+                            <p class="mt-2 text-base text-gray-400">Our team are highly experienced on property marketing and management, especially on residence & resort management.</p>
+                        </div>
+                        <div class="bg-[#003837] p-6 rounded-lg shadow-lg" data-aos="fade-up" data-aos-delay="200">
+                            <h4 class="text-xl font-bold text-yellow-400">Complimentary Touch-Up Design</h4>
+                            <p class="mt-2 text-base text-gray-400">Trihana Management committed to deliver a tailored and market updated property design concept, especially on space saving and recycled materials.</p>
+                        </div>
+                        <div class="bg-[#003837] p-6 rounded-lg shadow-lg" data-aos="fade-up" data-aos-delay="300">
+                            <h4 class="text-xl font-bold text-yellow-400">Experienced Assistance Service</h4>
+                            <p class="mt-2 text-base text-gray-400">For more than 20 years in Hospitality, we handled almost everything to fixing any issues and keep track of expenses, payments, and taxes.</p>
+                        </div>
+                        <div class="bg-[#003837] p-6 rounded-lg shadow-lg" data-aos="fade-up" data-aos-delay="400">
+                            <h4 class="text-xl font-bold text-yellow-400">Efficiency Expense & Profit Oriented</h4>
+                            <p class="mt-2 text-base text-gray-400">We streamline operations to reduce costs, maintain facilities to preserve property value, and implement strategic marketing to ensure high occupancy rates and optimal rental income.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="py-16">
+                    <h3 class="text-center text-3xl font-extrabold text-white sm:text-4xl mb-12" data-aos="fade-up">
+                        Our Workflow 
+                    </h3>
+                    <div class="max-w-3xl mx-auto" data-aos="zoom-in-up">
+                        <ol class="relative border-l border-[#004F4D]">                  
+                             <li class="mb-10 ml-6">            
+                                <span class="absolute flex items-center justify-center w-6 h-6 bg-yellow-400 rounded-full -left-3 ring-8 ring-[#002B2A]">
+                                    <span class="text-gray-900 font-bold">1</span>
+                                </span>
+                                <h4 class="text-lg font-semibold text-white">Inspections & Inventory</h4>
+                                <p class="text-base text-gray-400">Conducting inspections using smart checklists for rental inspections and building maintenance, furniture interiors inventory.</p>
+                            </li>
+                            <li class="mb-10 ml-6">
+                                <span class="absolute flex items-center justify-center w-6 h-6 bg-yellow-400 rounded-full -left-3 ring-8 ring-[#002B2A]">
+                                    <span class="text-gray-900 font-bold">2</span>
+                                </span>
+                                <h4 class="text-lg font-semibold text-white">Data & Analytics</h4>
+                                <p class="text-base text-gray-400">Gather useful data and analytics for financial reports, repair and maintenance jobs, and tenant safety.</p>
+                            </li>
+                             <li class="mb-10 ml-6">
+                                <span class="absolute flex items-center justify-center w-6 h-6 bg-yellow-400 rounded-full -left-3 ring-8 ring-[#002B2A]">
+                                    <span class="text-gray-900 font-bold">3</span>
+                                </span>
+                                <h4 class="text-lg font-semibold text-white">Reporting</h4>
+                                <p class="text-base text-gray-400">Generating smart and comprehensive reports from property inspections and routine checks to comply with residential building quality, and house hold.</p>
+                            </li>
+                             <li class="mb-10 ml-6">
+                                <span class="absolute flex items-center justify-center w-6 h-6 bg-yellow-400 rounded-full -left-3 ring-8 ring-[#002B2A]">
+                                    <span class="text-gray-900 font-bold">4</span>
+                                </span>
+                                <h4 class="text-lg font-semibold text-white">Workflow Building</h4>
+                                <p class="text-base text-gray-400">Building workflows to make it easier to cover all bases of property management tasks from screening and leasing to repairs and maintenance jobs.</p>
+                            </li>
+                             <li class="mb-10 ml-6 p-6 bg-yellow-900/20 rounded-lg border border-yellow-400">
+                                <span class="absolute flex items-center justify-center w-6 h-6 bg-yellow-400 rounded-full -left-3 ring-8 ring-[#002B2A]">
+                                    <span class="text-gray-900 font-bold">5</span>
+                                </span>
+                                <h4 class="text-xl font-bold text-yellow-300">Investor Meeting & Dealing Process</h4>
+                            </li>
+                             <li class="mb-10 ml-6">
+                                <span class="absolute flex items-center justify-center w-6 h-6 bg-yellow-400 rounded-full -left-3 ring-8 ring-[#002B2A]">
+                                    <span class="text-gray-900 font-bold">6</span>
+                                </span>
+                                <h4 class="text-lg font-semibold text-white">Proposal & Planning</h4>
+                                <p class="text-base text-gray-400">Create a complete Residential Management proposal with new interior plan, budget plan, and financial projection.</p>
+                            </li>
+                             <li class="mb-10 ml-6">
+                                <span class="absolute flex items-center justify-center w-6 h-6 bg-yellow-400 rounded-full -left-3 ring-8 ring-[#002B2A]">
+                                    <span class="text-gray-900 font-bold">7</span>
+                                </span>
+                                <h4 class="text-lg font-semibold text-white">Agreement</h4>
+                                <p class="text-base text-gray-400">Cooperation agreement and all legal document to be discuss.</p>
+                            </li>
+                             <li class="mb-10 ml-6">
+                                <span class="absolute flex items-center justify-center w-6 h-6 bg-yellow-400 rounded-full -left-3 ring-8 ring-[#002B2A]">
+                                    <span class="text-gray-900 font-bold">8</span>
+                                </span>
+                                <h4 class="text-lg font-semibold text-white">Execution</h4>
+                                <p class="text-base text-gray-400">Begin the touch-up process on the property as planned and according to the agreed timeline.</p>
+                            </li>
+                        </ol>
+                        <p class="text-center text-sm text-gray-500 italic mt-8">
+                            *This is the general workflow of TRIHANA MANAGEMENT, it depends on property, field situation, and other external factors that will affect this workflow. 
+                        </p>
+                    </div>
+                </div>
+
+                <div class="py-16 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div data-aos="fade-right" data-aos-duration="600">
+                        <h3 class="text-2xl font-bold text-yellow-400">Revenue Scheme</h3>
+                        <p class="mt-4 text-lg text-gray-300">
+                            TRIHANA Management will take <strong>30% of the monthly revenue</strong> from residential management properties as a management fee. 
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 my-4">
+                            <span class="bg-yellow-400 text-gray-900 font-semibold px-4 py-2 rounded text-center">20% Trihana Management</span>
+                            <span class="bg-yellow-200 text-gray-900 font-semibold px-4 py-2 rounded text-center">10% Investor</span>
+                        </div>
+                        
+                        <p class="mt-6 text-lg text-gray-300">
+                           <strong>The Property Owner will receive 100% of the profit</strong> after deducting the management fee and operational costs. 
+                        </p>
+                        <div class="mt-4 border border-[#004F4D] rounded-lg p-4 bg-[#003837] text-center">
+                            <span class="text-lg font-semibold text-white">Profit</span>
+                            <p class="text-lg md:text-xl font-mono text-yellow-400 mt-2">Revenue - (Mgmt Fee + Op. Costs)</p>
+                        </div>
+                    </div>
+                    <div class="mt-10 md:mt-0" data-aos="fade-left" data-aos-duration="600">
+                        <img src="img/revenue.webp" alt="Revenue Image [Ganti gambar ini di Controller]" class="rounded-lg shadow-xl object-cover w-full h-full">
+                    </div>
+                </div>
+
+                 <div class="py-16 text-center" data-aos="zoom-in">
+                    <h3 class="text-3xl font-extrabold text-white sm:text-4xl mb-8">
+                        Our Partner 
+                    </h3>
+                    <div class="relative max-w-5xl mx-auto h-64 bg-[#003837] rounded-lg flex items-center justify-center">
+                        <img src="img/partner.webp" 
+                            alt="Partner Logo" 
+                            class="absolute inset-0 w-full h-full object-contain rounded-lg p-8"> 
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="testimonials" class="py-20 sm:py-32 bg-[#002524]">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                <div class="text-center mb-16" data-aos="fade-up">
+                    <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
+                        What Our Clients Say
+                    </h2>
+                    <p class="mt-4 text-xl text-gray-400">
+                        Real feedback from our satisfied partners.
+                    </p>
+                </div>
+
+                <div class="relative max-w-3xl mx-auto bg-[#003837] rounded-lg shadow-lg" data-aos="fade-up" data-aos-delay="200">
+                    <div class="relative h-96 overflow-hidden rounded-lg p-8 md:p-12">
+                        
+                        <div class="testimonial-slide absolute inset-0 p-8 md:p-12 flex flex-col items-center justify-center text-center opacity-0 transition-opacity duration-500 ease-in-out">
+                            <img class="h-24 w-24 rounded-full object-cover mb-4" src="https://i.pravatar.cc/100?img=1" alt="Testimonial Photo 1">
+                            <p class="text-lg italic text-gray-300 mb-4">"Trihana Management revolutionized our property. Their team handled everything from marketing to maintenance flawlessly. Our occupancy rates have never been higher."</p>
+                            <h4 class="font-bold text-yellow-400">Client A</h4>
+                            <span class="text-sm text-gray-400">Property Owner, Residence XYZ</span>
+                        </div>
+
+                        <div class="testimonial-slide absolute inset-0 p-8 md:p-12 flex flex-col items-center justify-center text-center opacity-0 transition-opacity duration-500 ease-in-out hidden">
+                            <img class="h-24 w-24 rounded-full object-cover mb-4" src="https://i.pravatar.cc/100?img=2" alt="Testimonial Photo 2">
+                            <p class="text-lg italic text-gray-300 mb-4">"The complimentary touch-up design was a game-changer. They gave our space a modern look that attracted new tenants immediately. Highly recommended!"</p>
+                            <h4 class="font-bold text-yellow-400">Client B</h4>
+                            <span class="text-sm text-gray-400">Investor, Asyana Resort</span>
+                        </div>
+
+                        <div class="testimonial-slide absolute inset-0 p-8 md:p-12 flex flex-col items-center justify-center text-center opacity-0 transition-opacity duration-500 ease-in-out hidden">
+                            <img class="h-24 w-24 rounded-full object-cover mb-4" src="https://i.pravatar.cc/100?img=3" alt="Testimonial Photo 3">
+                            <p class="text-lg italic text-gray-300 mb-4">"Their 20 years of experience truly shows. They handle financial reporting and tenant issues with absolute professionalism. It's a worry-free service."</p>
+                            <h4 class="font-bold text-yellow-400">Client C</h4>
+                            <span class="text-sm text-gray-400">Landowner</span>
+                        </div>
+
+                        </div>
+                    
+                    <button id="prev-slide" class="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-4 md:-translate-x-6 bg-white/10 hover:bg-white/20 text-white rounded-full p-2 transition-all z-10">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <button id="next-slide" class="absolute top-1/2 right-0 -translate-y-1/2 translate-x-4 md:translate-x-6 bg-white/10 hover:bg-white/20 text-white rounded-full p-2 transition-all z-10">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+        <section id="faq" class="py-20 sm:py-32 bg-[#002B2A]">
+             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <div class="text-center mb-16" data-aos="fade-up">
+                    <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
+                        Frequently Asked Questions
+                    </h2>
+                    <p class="mt-4 text-xl text-gray-400">
+                        Your questions, answered.
+                    </p>
+                </div>
+
+                <div class="max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+                    
+                    
+                                        <div class="py-5 border-b border-[#004F4D]">
+                        <input type="checkbox" id="faq-toggle-0" class="peer hidden" />
+                        <label for="faq-toggle-0" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
+                            <span>What is Trihana Management?</span>
+                            <span class="text-yellow-400 transition-transform duration-300 peer-checked:rotate-45">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" />
+                                </svg>
+                            </span>
+                        </label>
+                        <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out peer-checked:max-h-96 peer-checked:pt-4">
+                            <p class="text-gray-400 leading-relaxed">
+                                Trihana Management is a company specializing in residential property management. We have over 20 years of experience in property maintenance, facility management, marketing, and residential administration.
+                            </p>
+                        </div>
+                    </div>
+                                        <div class="py-5 border-b border-[#004F4D]">
+                        <input type="checkbox" id="faq-toggle-1" class="peer hidden" />
+                        <label for="faq-toggle-1" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
+                            <span>What services does Trihana Management offer?</span>
+                            <span class="text-yellow-400 transition-transform duration-300 peer-checked:rotate-45">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" />
+                                </svg>
+                            </span>
+                        </label>
+                        <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out peer-checked:max-h-96 peer-checked:pt-4">
+                            <p class="text-gray-400 leading-relaxed">
+                                We offer a complete range of services, including: <br />
+ • Marketing the property <br />
+ • Screening tenants <br />
+ • Collecting rent <br />
+ • Maintaining the property <br />
+ • Conducting inspections <br />
+ • Financial reporting
+                            </p>
+                        </div>
+                    </div>
+                                        <div class="py-5 border-b border-[#004F4D]">
+                        <input type="checkbox" id="faq-toggle-2" class="peer hidden" />
+                        <label for="faq-toggle-2" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
+                            <span>How much experience does Trihana Management have?</span>
+                            <span class="text-yellow-400 transition-transform duration-300 peer-checked:rotate-45">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" />
+                                </svg>
+                            </span>
+                        </label>
+                        <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out peer-checked:max-h-96 peer-checked:pt-4">
+                            <p class="text-gray-400 leading-relaxed">
+                                Trihana Management has over 20 years of experience in hospitality and property management.
+                            </p>
+                        </div>
+                    </div>
+                                        <div class="py-5 border-b border-[#004F4D]">
+                        <input type="checkbox" id="faq-toggle-3" class="peer hidden" />
+                        <label for="faq-toggle-3" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
+                            <span>What makes Trihana Management different?</span>
+                            <span class="text-yellow-400 transition-transform duration-300 peer-checked:rotate-45">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" />
+                                </svg>
+                            </span>
+                        </label>
+                        <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out peer-checked:max-h-96 peer-checked:pt-4">
+                            <p class="text-gray-400 leading-relaxed">
+                                Our advantages lie in four main pillars: <br />
+ 1. A Professional &amp; Creative Team <br />
+ 2. Complimentary Touch-Up Design <br />
+ 3. Experienced Assistance Service <br />
+ 4. Efficiency &amp; Profit Orientation
+                            </p>
+                        </div>
+                    </div>
+                                        <div class="py-5 border-b border-[#004F4D]">
+                        <input type="checkbox" id="faq-toggle-4" class="peer hidden" />
+                        <label for="faq-toggle-4" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
+                            <span>How does the Revenue Scheme work?</span>
+                            <span class="text-yellow-400 transition-transform duration-300 peer-checked:rotate-45">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" />
+                                </svg>
+                            </span>
+                        </label>
+                        <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out peer-checked:max-h-96 peer-checked:pt-4">
+                            <p class="text-gray-400 leading-relaxed">
+                                Trihana Management takes 30% of the monthly revenue (20% for management, 10% for the Investor). The Property Owner receives 100% of the net profit after deducting fees and operational costs.
+                            </p>
+                        </div>
+                    </div>
+                                        <div class="py-5 border-b border-[#004F4D]">
+                        <input type="checkbox" id="faq-toggle-5" class="peer hidden" />
+                        <label for="faq-toggle-5" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
+                            <span>What are the qualifications for your property managers?</span>
+                            <span class="text-yellow-400 transition-transform duration-300 peer-checked:rotate-45">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" />
+                                </svg>
+                            </span>
+                        </label>
+                        <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out peer-checked:max-h-96 peer-checked:pt-4">
+                            <p class="text-gray-400 leading-relaxed">
+                                Our managers must have a wide set of skills, including strong communication, patience, knowledge of local rules, financial management, organization, customer service, marketing, and assertiveness.
+                            </p>
+                        </div>
+                    </div>
+                                        <div class="py-5 border-b border-[#004F4D]">
+                        <input type="checkbox" id="faq-toggle-6" class="peer hidden" />
+                        <label for="faq-toggle-6" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
+                            <span>What is the general workflow?</span>
+                            <span class="text-yellow-400 transition-transform duration-300 peer-checked:rotate-45">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" />
+                                </svg>
+                            </span>
+                        </label>
+                        <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out peer-checked:max-h-96 peer-checked:pt-4">
+                            <p class="text-gray-400 leading-relaxed">
+                                Our process starts with inspections and data collection, followed by investor meetings, a full proposal, legal agreements, and finally, the execution of the property touch-up.
+                            </p>
+                        </div>
+                    </div>
+                                        <div class="py-5 border-b border-[#004F4D]">
+                        <input type="checkbox" id="faq-toggle-7" class="peer hidden" />
+                        <label for="faq-toggle-7" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
+                            <span>Is that workflow the same for all properties?</span>
+                            <span class="text-yellow-400 transition-transform duration-300 peer-checked:rotate-45">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" />
+                                </svg>
+                            </span>
+                        </label>
+                        <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out peer-checked:max-h-96 peer-checked:pt-4">
+                            <p class="text-gray-400 leading-relaxed">
+                                No. The workflow shown is a general one. It may change depending on the property, field situation, and other external factors.
+                            </p>
+                        </div>
+                    </div>
+                                        <div class="py-5 border-b border-[#004F4D]">
+                        <input type="checkbox" id="faq-toggle-8" class="peer hidden" />
+                        <label for="faq-toggle-8" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
+                            <span>Why is property management important?</span>
+                            <span class="text-yellow-400 transition-transform duration-300 peer-checked:rotate-45">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" />
+                                </svg>
+                            </span>
+                        </label>
+                        <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out peer-checked:max-h-96 peer-checked:pt-4">
+                            <p class="text-gray-400 leading-relaxed">
+                                Property management is crucial to ensure rental properties remain profitable, tenants pay on time, and the property is kept in the best possible condition.
+                            </p>
+                        </div>
+                    </div>
+                                        <div class="py-5 border-b border-[#004F4D]">
+                        <input type="checkbox" id="faq-toggle-9" class="peer hidden" />
+                        <label for="faq-toggle-9" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
+                            <span>How can I contact Trihana Management?</span>
+                            <span class="text-yellow-400 transition-transform duration-300 peer-checked:rotate-45">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" />
+                                </svg>
+                            </span>
+                        </label>
+                        <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out peer-checked:max-h-96 peer-checked:pt-4">
+                            <p class="text-gray-400 leading-relaxed">
+                                You can contact us via: <br />
+ Phone: +6281 237 518 817 (Riri) <br />
+ Email: trihanamanagement@gmail.com <br />
+ Website: www.trihanamanagement.com
+                            </p>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="bg-[#002524] py-20 sm:py-32">
+             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div class="text-center md:text-left" data-aos="fade-right" data-aos-duration="600">
+                        <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
+                            Thank You 
+                        </h2>
+                        <h3 class="mt-4 text-2xl font-bold text-yellow-400">
+                            TRIHANA MANAGEMENT 
+                        </h3>
+                        <div class="mt-8 space-y-4">
+                            <p class="flex items-center justify-center md:justify-start">
+                                <svg class="w-6 h-6 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                <span>T +6281 237 518 817 (Riri)</span>
+                            </p>
+                            <p class="flex items-center justify-center md:justify-start">
+                                <svg class="w-6 h-6 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                <span>E trihanamanagement@gmail.com</span>
+                            </p>
+                            <p class="flex items-center justify-center md:justify-start">
+                                <svg class="w-6 h-6 text-yellow-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                                <span>W www.trihanamanagement.com</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div data-aos="fade-left" data-aos-duration="600">
+                         <img src="img/contact us.webp" alt="Contact Image [Ganti gambar ini di Controller]" class="rounded-lg shadow-xl object-cover w-full h-full max-h-96">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-[#002524] border-t border-[#004F4D]">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
+            &copy; 2025 Trihana Management. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            // --- Script Menu Mobile ---
+            const menuToggle = document.getElementById('mobile-menu-toggle');
+            const menuLinks = document.querySelectorAll('#mobile-menu-content a');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (menuToggle) {
+                        menuToggle.checked = false;
+                    }
+                });
+            });
+
+            // --- Script FAQ Accordion ---
+            const faqToggles = document.querySelectorAll('input[type="checkbox"][id^="faq-toggle-"]');
+            faqToggles.forEach(toggle => {
+                toggle.addEventListener('change', () => {
+                    if (toggle.checked) {
+                        faqToggles.forEach(otherToggle => {
+                            if (otherToggle !== toggle) {
+                                otherToggle.checked = false;
+                            }
+                        });
+                    }
+                });
+            });
+            
+            // ======================================================
+            // ===== SCRIPT BARU UNTUK TESTIMONIAL SLIDER =====
+            // ======================================================
+            const slides = document.querySelectorAll('.testimonial-slide');
+            const prevButton = document.getElementById('prev-slide');
+            const nextButton = document.getElementById('next-slide');
+            let currentSlide = 0;
+
+            if (slides.length > 0) {
+                function showSlide(index) {
+                    slides.forEach((slide) => {
+                        slide.classList.add('hidden');
+                        slide.classList.remove('opacity-100');
+                    });
+                    
+                    slides[index].classList.remove('hidden');
+                    setTimeout(() => {
+                        slides[index].classList.add('opacity-100');
+                    }, 50); // Delay kecil untuk transisi opacity
+                }
+
+                nextButton.addEventListener('click', () => {
+                    currentSlide++;
+                    if (currentSlide >= slides.length) {
+                        currentSlide = 0; // Loop kembali ke slide pertama
+                    }
+                    showSlide(currentSlide);
+                });
+
+                prevButton.addEventListener('click', () => {
+                    currentSlide--;
+                    if (currentSlide < 0) {
+                        currentSlide = slides.length - 1; // Loop ke slide terakhir
+                    }
+                    showSlide(currentSlide);
+                });
+
+                // Tampilkan slide pertama saat halaman dimuat
+                showSlide(0);
+            }
+            // ======================================================
+
+        });
+    </script>
+    
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+      AOS.init({
+        duration: 800,
+        once: true,
+      });
+    </script>
+    </body>
+</html>
