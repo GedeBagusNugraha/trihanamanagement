@@ -9,193 +9,10 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
 
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <script type="module" src="http://[::1]:5173/@vite/client"></script><link rel="stylesheet" href="http://[::1]:5173/resources/css/app.css" /><script type="module" src="http://[::1]:5173/resources/js/app.js"></script><script id="browser-logger-active">
-(function() {
-    const ENDPOINT = 'http://127.0.0.1:8000/_boost/browser-logs';
-    const logQueue = [];
-    let flushTimeout = null;
 
-    console.log('🔍 Browser logger active (MCP server detected). Posting to: ' + ENDPOINT);
+    <script src="https://cdn.tailwindcss.com"></script>
 
-    // Store original console methods
-    const originalConsole = {
-        log: console.log,
-        info: console.info,
-        error: console.error,
-        warn: console.warn,
-        table: console.table
-    };
-
-    // Helper to safely stringify values
-    function safeStringify(obj) {
-        const seen = new WeakSet();
-        return JSON.stringify(obj, (key, value) => {
-            if (typeof value === 'object' && value !== null) {
-                if (seen.has(value)) return '[Circular]';
-                seen.add(value);
-            }
-            if (value instanceof Error) {
-                return {
-                    name: value.name,
-                    message: value.message,
-                    stack: value.stack
-                };
-            }
-            return value;
-        });
-    }
-
-    // Batch and send logs
-    function flushLogs() {
-        if (logQueue.length === 0) return;
-
-        const batch = logQueue.splice(0, logQueue.length);
-
-        fetch(ENDPOINT, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ logs: batch })
-        }).catch(err => {
-            // Silently fail to avoid infinite loops
-            originalConsole.error('Failed to send logs:', err);
-        });
-    }
-
-    // Debounced flush (100ms)
-    function scheduleFlush() {
-        if (flushTimeout) clearTimeout(flushTimeout);
-        flushTimeout = setTimeout(flushLogs, 100);
-    }
-
-    // Intercept console methods
-    ['log', 'info', 'error', 'warn', 'table'].forEach(method => {
-        console[method] = function(...args) {
-            // Call original method
-            originalConsole[method].apply(console, args);
-
-            // Capture log data
-            try {
-                logQueue.push({
-                    type: method,
-                    timestamp: new Date().toISOString(),
-                    data: args.map(arg => {
-                        try {
-                            return typeof arg === 'object' ? JSON.parse(safeStringify(arg)) : arg;
-                        } catch (e) {
-                            return String(arg);
-                        }
-                    }),
-                    url: window.location.href,
-                    userAgent: navigator.userAgent
-                });
-
-                scheduleFlush();
-            } catch (e) {
-                // Fail silently
-            }
-        };
-    });
-
-    // Global error handlers for uncaught errors
-    const originalOnError = window.onerror;
-    window.onerror = function boostErrorHandler(errorMsg, url, lineNumber, colNumber, error) {
-        try {
-            logQueue.push({
-                type: 'uncaught_error',
-                timestamp: new Date().toISOString(),
-                data: [{
-                    message: errorMsg,
-                    filename: url,
-                    lineno: lineNumber,
-                    colno: colNumber,
-                    error: error ? {
-                        name: error.name,
-                        message: error.message,
-                        stack: error.stack
-                    } : null
-                }],
-                url: window.location.href,
-                userAgent: navigator.userAgent
-            });
-
-            scheduleFlush();
-        } catch (e) {
-            // Fail silently
-        }
-
-        // Call original handler if it exists
-        if (originalOnError && typeof originalOnError === 'function') {
-            return originalOnError(errorMsg, url, lineNumber, colNumber, error);
-        }
-
-        // Let the error continue to propagate
-        return false;
-    }
-    window.addEventListener('error', (event) => {
-        try {
-            logQueue.push({
-                type: 'window_error',
-                timestamp: new Date().toISOString(),
-                data: [{
-                    message: event.message,
-                    filename: event.filename,
-                    lineno: event.lineno,
-                    colno: event.colno,
-                    error: event.error ? {
-                        name: event.error.name,
-                        message: event.error.message,
-                        stack: event.error.stack
-                    } : null
-                }],
-                url: window.location.href,
-                userAgent: navigator.userAgent
-            });
-
-            scheduleFlush();
-        } catch (e) {
-            // Fail silently
-        }
-
-        // Let the error continue to propagate
-        return false;
-    });
-    window.addEventListener('unhandledrejection', (event) => {
-        try {
-            logQueue.push({
-                type: 'error',
-                timestamp: new Date().toISOString(),
-                data: [{
-                    message: 'Unhandled Promise Rejection',
-                    reason: event.reason instanceof Error ? {
-                        name: event.reason.name,
-                        message: event.reason.message,
-                        stack: event.reason.stack
-                    } : event.reason
-                }],
-                url: window.location.href,
-                userAgent: navigator.userAgent
-            });
-
-            scheduleFlush();
-        } catch (e) {
-            // Fail silently
-        }
-
-        // Let the rejection continue to propagate
-        return false;
-    });
-
-    // Flush on page unload
-    window.addEventListener('beforeunload', () => {
-        if (logQueue.length > 0) {
-            navigator.sendBeacon(ENDPOINT, JSON.stringify({ logs: logQueue }));
-        }
-    });
-})();
-</script>
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body class="antialiased bg-[#002B2A] text-gray-300">
     
@@ -204,8 +21,8 @@
             <div class="flex justify-between items-center h-16">
                 <div class="flex-shrink-0 flex items-center">
                     <a href="#home">
-                         <img class="h-10 w-auto" 
-                               src="http://127.0.0.1:8000/img/logotrihana.png" 
+                        <img class="h-10 w-auto" 
+                               src="img/logotrihana.png" 
                                alt="Trihana Management Logo">
                     </a>
                 </div>
@@ -331,7 +148,7 @@
                         </ul>
                     </div>
                     <div class="mt-10 md:mt-0" data-aos="fade-left" data-aos-duration="600">
-                        <img src="img/service.webp" alt="Services Image [Ganti gambar ini di Controller]" class="rounded-lg shadow-xl object-cover w-full h-full">
+                        <img src="img/service.webp" alt="Services Image" class="rounded-lg shadow-xl object-cover w-full h-full">
                     </div>
                 </div>
 
@@ -377,7 +194,7 @@
                         </ul>
                     </div>
                     <div class="md:order-1" data-aos="fade-right" data-aos-duration="600">
-                        <img src="img/qualification.webp" alt="Qualification Image [Ganti gambar ini di Controller]" class="rounded-lg shadow-xl object-cover w-full h-full">
+                        <img src="img/qualification.webp" alt="Qualification Image" class="rounded-lg shadow-xl object-cover w-full h-full">
                     </div>
                 </div>
 
@@ -411,7 +228,7 @@
                     </h3>
                     <div class="max-w-3xl mx-auto" data-aos="zoom-in-up">
                         <ol class="relative border-l border-[#004F4D]">                  
-                             <li class="mb-10 ml-6">            
+                             <li class="mb-10 ml-6">             
                                 <span class="absolute flex items-center justify-center w-6 h-6 bg-yellow-400 rounded-full -left-3 ring-8 ring-[#002B2A]">
                                     <span class="text-gray-900 font-bold">1</span>
                                 </span>
@@ -493,7 +310,7 @@
                         </div>
                     </div>
                     <div class="mt-10 md:mt-0" data-aos="fade-left" data-aos-duration="600">
-                        <img src="img/revenue.webp" alt="Revenue Image [Ganti gambar ini di Controller]" class="rounded-lg shadow-xl object-cover w-full h-full">
+                        <img src="img/revenue.webp" alt="Revenue Image" class="rounded-lg shadow-xl object-cover w-full h-full">
                     </div>
                 </div>
 
@@ -557,6 +374,7 @@
                 </div>
             </div>
         </section>
+        
         <section id="faq" class="py-20 sm:py-32 bg-[#002B2A]">
              <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 
@@ -571,8 +389,7 @@
 
                 <div class="max-w-3xl mx-auto" data-aos="fade-up" data-aos-delay="200">
                     
-                    
-                                        <div class="py-5 border-b border-[#004F4D]">
+                    <div class="py-5 border-b border-[#004F4D]">
                         <input type="checkbox" id="faq-toggle-0" class="peer hidden" />
                         <label for="faq-toggle-0" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
                             <span>What is Trihana Management?</span>
@@ -588,7 +405,8 @@
                             </p>
                         </div>
                     </div>
-                                        <div class="py-5 border-b border-[#004F4D]">
+                    
+                    <div class="py-5 border-b border-[#004F4D]">
                         <input type="checkbox" id="faq-toggle-1" class="peer hidden" />
                         <label for="faq-toggle-1" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
                             <span>What services does Trihana Management offer?</span>
@@ -601,16 +419,17 @@
                         <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out peer-checked:max-h-96 peer-checked:pt-4">
                             <p class="text-gray-400 leading-relaxed">
                                 We offer a complete range of services, including: <br />
- • Marketing the property <br />
- • Screening tenants <br />
- • Collecting rent <br />
- • Maintaining the property <br />
- • Conducting inspections <br />
- • Financial reporting
+                                • Marketing the property <br />
+                                • Screening tenants <br />
+                                • Collecting rent <br />
+                                • Maintaining the property <br />
+                                • Conducting inspections <br />
+                                • Financial reporting
                             </p>
                         </div>
                     </div>
-                                        <div class="py-5 border-b border-[#004F4D]">
+
+                    <div class="py-5 border-b border-[#004F4D]">
                         <input type="checkbox" id="faq-toggle-2" class="peer hidden" />
                         <label for="faq-toggle-2" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
                             <span>How much experience does Trihana Management have?</span>
@@ -626,7 +445,8 @@
                             </p>
                         </div>
                     </div>
-                                        <div class="py-5 border-b border-[#004F4D]">
+
+                    <div class="py-5 border-b border-[#004F4D]">
                         <input type="checkbox" id="faq-toggle-3" class="peer hidden" />
                         <label for="faq-toggle-3" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
                             <span>What makes Trihana Management different?</span>
@@ -639,14 +459,15 @@
                         <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out peer-checked:max-h-96 peer-checked:pt-4">
                             <p class="text-gray-400 leading-relaxed">
                                 Our advantages lie in four main pillars: <br />
- 1. A Professional &amp; Creative Team <br />
- 2. Complimentary Touch-Up Design <br />
- 3. Experienced Assistance Service <br />
- 4. Efficiency &amp; Profit Orientation
+                                1. A Professional & Creative Team <br />
+                                2. Complimentary Touch-Up Design <br />
+                                3. Experienced Assistance Service <br />
+                                4. Efficiency & Profit Orientation
                             </p>
                         </div>
                     </div>
-                                        <div class="py-5 border-b border-[#004F4D]">
+
+                    <div class="py-5 border-b border-[#004F4D]">
                         <input type="checkbox" id="faq-toggle-4" class="peer hidden" />
                         <label for="faq-toggle-4" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
                             <span>How does the Revenue Scheme work?</span>
@@ -662,7 +483,8 @@
                             </p>
                         </div>
                     </div>
-                                        <div class="py-5 border-b border-[#004F4D]">
+
+                    <div class="py-5 border-b border-[#004F4D]">
                         <input type="checkbox" id="faq-toggle-5" class="peer hidden" />
                         <label for="faq-toggle-5" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
                             <span>What are the qualifications for your property managers?</span>
@@ -678,7 +500,8 @@
                             </p>
                         </div>
                     </div>
-                                        <div class="py-5 border-b border-[#004F4D]">
+
+                    <div class="py-5 border-b border-[#004F4D]">
                         <input type="checkbox" id="faq-toggle-6" class="peer hidden" />
                         <label for="faq-toggle-6" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
                             <span>What is the general workflow?</span>
@@ -694,7 +517,8 @@
                             </p>
                         </div>
                     </div>
-                                        <div class="py-5 border-b border-[#004F4D]">
+
+                    <div class="py-5 border-b border-[#004F4D]">
                         <input type="checkbox" id="faq-toggle-7" class="peer hidden" />
                         <label for="faq-toggle-7" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
                             <span>Is that workflow the same for all properties?</span>
@@ -710,7 +534,8 @@
                             </p>
                         </div>
                     </div>
-                                        <div class="py-5 border-b border-[#004F4D]">
+
+                    <div class="py-5 border-b border-[#004F4D]">
                         <input type="checkbox" id="faq-toggle-8" class="peer hidden" />
                         <label for="faq-toggle-8" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
                             <span>Why is property management important?</span>
@@ -726,7 +551,8 @@
                             </p>
                         </div>
                     </div>
-                                        <div class="py-5 border-b border-[#004F4D]">
+
+                    <div class="py-5 border-b border-[#004F4D]">
                         <input type="checkbox" id="faq-toggle-9" class="peer hidden" />
                         <label for="faq-toggle-9" class="flex justify-between items-center w-full text-lg font-semibold text-white cursor-pointer hover:text-yellow-400">
                             <span>How can I contact Trihana Management?</span>
@@ -739,9 +565,9 @@
                         <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out peer-checked:max-h-96 peer-checked:pt-4">
                             <p class="text-gray-400 leading-relaxed">
                                 You can contact us via: <br />
- Phone: +6281 237 518 817 (Riri) <br />
- Email: trihanamanagement@gmail.com <br />
- Website: www.trihanamanagement.com
+                                Phone: +6281 237 518 817 (Riri) <br />
+                                Email: trihanamanagement@gmail.com <br />
+                                Website: www.trihanamanagement.com
                             </p>
                         </div>
                     </div>
@@ -776,7 +602,7 @@
                         </div>
                     </div>
                     <div data-aos="fade-left" data-aos-duration="600">
-                         <img src="img/contact us.webp" alt="Contact Image [Ganti gambar ini di Controller]" class="rounded-lg shadow-xl object-cover w-full h-full max-h-96">
+                        <img src="img/contact us.webp" alt="Contact Image" class="rounded-lg shadow-xl object-cover w-full h-full max-h-96">
                     </div>
                 </div>
             </div>
@@ -790,85 +616,9 @@
         </div>
     </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            
-            // --- Script Menu Mobile ---
-            const menuToggle = document.getElementById('mobile-menu-toggle');
-            const menuLinks = document.querySelectorAll('#mobile-menu-content a');
-            menuLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    if (menuToggle) {
-                        menuToggle.checked = false;
-                    }
-                });
-            });
-
-            // --- Script FAQ Accordion ---
-            const faqToggles = document.querySelectorAll('input[type="checkbox"][id^="faq-toggle-"]');
-            faqToggles.forEach(toggle => {
-                toggle.addEventListener('change', () => {
-                    if (toggle.checked) {
-                        faqToggles.forEach(otherToggle => {
-                            if (otherToggle !== toggle) {
-                                otherToggle.checked = false;
-                            }
-                        });
-                    }
-                });
-            });
-            
-            // ======================================================
-            // ===== SCRIPT BARU UNTUK TESTIMONIAL SLIDER =====
-            // ======================================================
-            const slides = document.querySelectorAll('.testimonial-slide');
-            const prevButton = document.getElementById('prev-slide');
-            const nextButton = document.getElementById('next-slide');
-            let currentSlide = 0;
-
-            if (slides.length > 0) {
-                function showSlide(index) {
-                    slides.forEach((slide) => {
-                        slide.classList.add('hidden');
-                        slide.classList.remove('opacity-100');
-                    });
-                    
-                    slides[index].classList.remove('hidden');
-                    setTimeout(() => {
-                        slides[index].classList.add('opacity-100');
-                    }, 50); // Delay kecil untuk transisi opacity
-                }
-
-                nextButton.addEventListener('click', () => {
-                    currentSlide++;
-                    if (currentSlide >= slides.length) {
-                        currentSlide = 0; // Loop kembali ke slide pertama
-                    }
-                    showSlide(currentSlide);
-                });
-
-                prevButton.addEventListener('click', () => {
-                    currentSlide--;
-                    if (currentSlide < 0) {
-                        currentSlide = slides.length - 1; // Loop ke slide terakhir
-                    }
-                    showSlide(currentSlide);
-                });
-
-                // Tampilkan slide pertama saat halaman dimuat
-                showSlide(0);
-            }
-            // ======================================================
-
-        });
-    </script>
-    
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>
-      AOS.init({
-        duration: 800,
-        once: true,
-      });
-    </script>
-    </body>
+    
+    <script src="app.js"></script>
+    
+</body>
 </html>
