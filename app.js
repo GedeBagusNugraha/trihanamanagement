@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const message = document.getElementById('message').value;
 
             const text = `Halo Trihana Management,%0a%0aSaya tertarik dengan layanan Anda. Berikut data diri saya:%0a%0a*Nama:* ${name}%0a*Email:* ${email}%0a*No. HP:* ${phone}%0a*Pesan:* ${message}%0a%0aSaya ingin mengunduh Company Profile Anda. Terima kasih.`;
-            const whatsappUrl = `https://wa.me/6281237518817?text=${text}`;
+            const whatsappUrl = `https://wa.me/6282146877075?text=${text}`;
 
             // Trigger Download
             const link = document.createElement('a');
@@ -372,3 +372,4 @@ function setLanguage(lang) {
         langMenu.classList.add('hidden');
     }
 }
+
